@@ -1,20 +1,16 @@
-// Supabase configuration - REPLACE WITH YOUR ACTUAL CREDENTIALS
-const SUPABASE_URL = 'https://your-project.supabase.co';
-const SUPABASE_ANON_KEY = 'your-anon-key-here';
+// Supabase configuration - DEMO MODE
+console.log('Supabase config loaded - running in demo mode');
 
-// Initialize Supabase client (will be used when credentials are added)
-let supabase;
-
-try {
-    if (typeof supabaseClient !== 'undefined') {
-        supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        console.log('Supabase client initialized');
-    }
-} catch (error) {
-    console.log('Supabase not available, using local storage only');
-}
-
-// For demo purposes - we'll use localStorage until Supabase is configured
+// Demo mode - skip Supabase initialization for now
 const demoMode = true;
 
-console.log('App running in demo mode - using localStorage');
+// Mock supabase object for demo
+const supabase = {
+    auth: {
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+        signOut: () => Promise.resolve(),
+        user: () => null
+    }
+};
+
+console.log('Running in demo mode - all data saved locally');
