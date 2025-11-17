@@ -1,0 +1,50 @@
+/* RTL specific styles for Arabic language */
+body {
+    text-align: right;
+}
+
+.progress-text, .user-info, .phase-indicator {
+    text-align: right;
+}
+
+.main-menu {
+    direction: rtl;
+}
+
+/* RTL adjustments for better Arabic typography */
+.container {
+    line-height: 1.8;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    letter-spacing: 0;
+}
+
+.btn, .menu-btn {
+    font-family: 'Tajawal', sans-serif;
+}
+
+/* RTL specific spacing */
+.phase-indicator .phase {
+    margin: 0 0 0 5px;
+}
+
+.phase-indicator .phase:first-child {
+    margin-left: 5px;
+    margin-right: 0;
+}
+
+/* Progress bar RTL support */
+.progress-bar {
+    direction: ltr; /* Keep progress fill LTR for visual consistency */
+}
+
+/* Celebration messages RTL */
+[class*="celebrat"] {
+    font-family: 'Tajawal', sans-serif;
+}
+
+/* Offline page RTL */
+.offline-container {
+    text-align: right;
+}

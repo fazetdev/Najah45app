@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>غير متصل - نجاح 45</title>
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            color: #333;
+        }
+        .container {
+            max-width: 500px;
+            margin: 100px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #ef4444;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background: #10b981;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">📶</div>
+        <h1>غير متصل بالإنترنت</h1>
+        <p>لا يوجد اتصال بالإنترنت حالياً. يمكنك الاستمرار في العمل محلياً وسيتم مزامنة بياناتك عند عودة الاتصال.</p>
+        <p>التطبيق يعمل بدون اتصال - يمكنك إكمال المهام ومتابعة تقدمك.</p>
+        <button class="btn" onclick="window.location.href='/dashboard.html'">استمر في العمل</button>
+        <button class="btn" onclick="location.reload()">إعادة المحاولة</button>
+    </div>
+</body>
+</html>

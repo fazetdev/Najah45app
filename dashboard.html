@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - نجاح 45</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>نجاح 45</h1>
+            <div class="user-info">
+                <span id="userEmail">user@example.com</span>
+                <button id="logoutBtn">تسجيل خروج</button>
+            </div>
+        </header>
+
+        <!-- Progress Section -->
+        <section class="progress-section">
+            <div class="phase-indicator">
+                <div class="phase phase-1 active">التحضير (1-15)</div>
+                <div class="phase phase-2">الإثبات (16-30)</div>
+                <div class="phase phase-3">العمل (31-45)</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+            <div class="progress-text">
+                <span id="currentDay">اليوم: 1</span>
+                <span id="daysLeft">متبقي: 44 يوم</span>
+            </div>
+        </section>
+
+        <!-- Daily Task -->
+        <section class="daily-task">
+            <h2 id="taskTitle">المهمة اليومية</h2>
+            <div id="taskDescription">سيتم تحميل المهمة قريباً...</div>
+            <div class="task-actions">
+                <button id="completeTaskBtn" class="btn-primary">أكمل المهمة</button>
+            </div>
+        </section>
+
+        <!-- Menu -->
+        <nav class="main-menu">
+            <button class="menu-btn" id="portfolioBtn" disabled>الملف الشخصي</button>
+            <button class="menu-btn" id="websiteBtn" disabled>موقع الويب</button>
+            <button class="menu-btn" id="groupBtn">المجموعة</button>
+            <button class="menu-btn" id="certificateBtn">الشهادة</button>
+        </nav>
+    </div>
+
+    <script src="js/supabase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
