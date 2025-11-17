@@ -4,12 +4,9 @@ class Najah45Dashboard {
         this.totalDays = 45;
         this.accessWindow = 48;
         this.progressData = null;
-        this.phases = {
-            1: { name: "التحضير", color: "#3b82f6", days: "1-15", badge: "phase1" },
-            2: { name: "الإثبات", color: "#10b981", days: "16-30", badge: "phase2" },
-            3: { name: "العمل", color: "#f59e0b", days: "31-45", badge: "phase3" }
-        };
-        this.achievements = [
+        this.userName = "زائر";
+        
+        this.medals = [
             { id: 1, name: "البداية", desc: "أكمل اليوم الأول", icon: "🎯", day: 1 },
             { id: 2, name: "أسبوع من التحدي", desc: "أكمل 7 أيام متتالية", icon: "🔥", day: 7 },
             { id: 3, name: "موقعي الإلكتروني", desc: "أنشئ موقعك الشخصي", icon: "🌐", day: 7 },
@@ -25,10 +22,15 @@ class Najah45Dashboard {
 
     init() {
         this.loadProgress();
+        this.setupEventListeners();
         this.renderCalendar();
         this.updateDashboard();
-        this.setupEventListeners();
-        this.checkAchievements();
+        this.checkMedals();
+        
+        // إذا كان المستخدم جديداً، اطلب اسمه
+        if (!this.progressData.userName) {
+            this.askForUserName();
+        }
     }
 
     loadProgress() {
@@ -36,15 +38,15 @@ class Najah45Dashboard {
         if (saved) {
             this.progressData = JSON.parse(saved);
             this.currentDay = Math.min(this.progressData.currentDay || 1, this.totalDays);
+            this.userName = this.progressData.userName || "زائر";
         } else {
             this.progressData = {
                 currentDay: 1,
                 completedDays: [],
                 streak: 0,
-                achievements: [],
-                website: "",
-                portfolio: [],
+                unlockedMedals: [],
                 proofs: {},
+                userName: "",
                 startDate: new Date().toISOString()
             };
             this.saveProgress();
@@ -53,6 +55,67 @@ class Najah45Dashboard {
 
     saveProgress() {
         localStorage.setItem('najah45_progress', JSON.stringify(this.progressData));
+    }
+
+    askForUserName() {
+        const name = prompt("مرحباً! ما هو اسمك؟") || "زميل";
+        this.userName = name;
+        this.progressData.userName = name;
+        this.saveProgress();
+        this.updateWelcomeMessage();
+    }
+
+    setupEventListeners() {
+        // زر رفع الإثبات
+        document.getElementById('uploadBtn').addEventListener('click', () => {
+            document.getElementById('proofFile').click();
+        });
+
+        // تغيير الملف
+        document.getElementById('proofFile').addEventListener('change', (e) => {
+            this.handleFileUpload(e);
+        });
+
+        // إزالة الصورة
+        document.getElementById('removeProofBtn').addEventListener('click', () => {
+            this.removeProof();
+        });
+
+        // نص الإثبات
+        document.getElementById('proofNotes').addEventListener('input', () => {
+            this.updateSubmitButton();
+        });
+
+        // زر التسليم
+        document.getElementById('submitBtn').addEventListener('click', () => {
+            this.submitTask();
+        });
+
+        // أزرار التنقل السفلي
+        document.getElementById('websiteBtn').addEventListener('click', () => {
+            this.openWebsite();
+        });
+
+        document.getElementById('portfolioBtn').addEventListener('click', () => {
+            this.openPortfolio();
+        });
+
+        document.getElementById('medalsBtn').addEventListener('click', () => {
+            this.showMedals();
+        });
+
+        document.getElementById('certificateBtn').addEventListener('click', () => {
+            this.showCertificate();
+        });
+
+        // إغلاق النوافذ
+        document.getElementById('closeMedals').addEventListener('click', () => {
+            document.getElementById('medalsModal').style.display = 'none';
+        });
+
+        document.getElementById('closeCertificate').addEventListener('click', () => {
+            document.getElementById('certificateModal').style.display = 'none';
+        });
     }
 
     renderCalendar() {
@@ -67,21 +130,15 @@ class Najah45Dashboard {
             if (day <= this.totalDays) {
                 if (this.progressData.completedDays.includes(day)) {
                     cell.className += ' completed';
-                    cell.title = `مكتمل - اليوم ${day}`;
                 } else if (day === this.currentDay) {
                     cell.className += ' current';
-                    cell.title = `الحالي - اليوم ${day}`;
                 } else if (day < this.currentDay) {
                     cell.className += ' missed';
-                    cell.title = `مفقود - اليوم ${day}`;
                 } else {
                     cell.className += ' upcoming';
-                    cell.title = `قادم - اليوم ${day}`;
                 }
             } else {
-                cell.style.background = '#f1f5f9';
-                cell.style.color = '#9ca3af';
-                cell.title = 'يوم مرن';
+                cell.className += ' grace';
             }
             
             grid.appendChild(cell);
@@ -89,121 +146,74 @@ class Najah45Dashboard {
     }
 
     updateDashboard() {
-        this.updateProgressInfo();
+        this.updateWelcomeMessage();
         this.updateTaskDisplay();
         this.updateNavigation();
+        this.updatePhases();
         this.renderCalendar();
     }
 
-    updateProgressInfo() {
-        document.getElementById('completedDays').textContent = this.progressData.completedDays.length;
+    updateWelcomeMessage() {
+        document.getElementById('welcomeText').textContent = `مرحباً يا ${this.userName}!`;
         document.getElementById('streakCount').textContent = this.progressData.streak;
-        
-        const phaseBadge = document.getElementById('phaseBadge');
-        const currentPhase = this.getCurrentPhase();
-        phaseBadge.textContent = this.phases[currentPhase].name;
-        phaseBadge.className = `phase-badge ${this.phases[currentPhase].badge}`;
-    }
-
-    getCurrentPhase() {
-        if (this.currentDay <= 15) return 1;
-        if (this.currentDay <= 30) return 2;
-        return 3;
     }
 
     updateTaskDisplay() {
         document.getElementById('taskTitle').textContent = `المهمة اليومية - اليوم ${this.currentDay}`;
-        document.getElementById('taskDescription').innerHTML = this.getTaskContent(this.currentDay);
+        document.getElementById('taskDescription').innerHTML = this.getTaskDescription(this.currentDay);
         this.resetProofSection();
     }
 
-    getTaskContent(day) {
+    getTaskDescription(day) {
         const tasks = {
-            1: `<h3>حدد مهارتك الرئيسية</h3>
-                <p>فكر في المهارات التي تمتلكها وتستطيع تقديمها كخدمة.</p>
-                <p><strong>المطلوب:</strong> اكتب قائمة بـ 3 مهارات رئيسية تمتلكها</p>`,
+            1: `<p><strong>اليوم الأول - ابدأ رحلتك!</strong></p>
+                <p>حدد مهارتك الرئيسية واكتب وصفاً مختصراً للخدمة التي ستقدمها.</p>
+                <p>💡 <em>تلميح: فكر فيما يطلبه منك الناس دائماً</em></p>`,
 
-            2: `<h3>ابحث عن المنافسين المحليين</h3>
-                <p>ابحث عن 3 أشخاص أو شركات يقدمون خدمات مشابهة في دول الخليج.</p>
-                <p><strong>المطلوب:</strong> اكتب ملاحظات عن ما تعلمته من المنافسين</p>`,
+            2: `<p><strong>ابحث عن المنافسين</strong></p>
+                <p>ابحث عن 3 منافسين محليين في مجالك وادرس عروضهم.</p>
+                <p>🎯 <em>الهدف: فهم السوق المحلي</em></p>`,
 
-            7: `<h3>🚀 ابدأ بناء موقعك الشخصي</h3>
-                <p>اليوم ستبدأ في إنشاء موقعك الشخصي! اضغط على زر "موقعي" في الأسفل للبدء.</p>
-                <p><strong>المطلوب:</strong> ابدأ في بناء الموقع باستخدام الأداة المخصصة</p>`,
+            3: `<p><strong>حدد جمهورك</strong></p>
+                <p>حدد جمهورك المستهدف في دول الخليج.</p>
+                <p>👥 <em>ركز على العملاء المناسبين</em></p>`,
 
-            15: `<h3>📊 ابدأ بناء محفظتك</h3>
-                <p>اليوم ستبدأ في إنشاء محفظة أعمالك! اضغط على زر "إنجازاتي" في الأسفل.</p>
-                <p><strong>المطلوب:</strong> ابدأ في إضافة مشاريعك إلى المحفظة</p>`
+            7: `<p><strong>🚀 ابدأ بناء موقعك الشخصي</strong></p>
+                <p>اليوم ستبدأ في إنشاء موقعك الشخصي!</p>
+                <p>🌐 <em>اضغط على زر "موقعي" في الأسفل للبدء</em></p>`,
+
+            8: `<p><strong>📊 ابدأ بناء إنجازاتك</strong></p>
+                <p>اليوم ستبدأ في بناء محفظة أعمالك!</p>
+                <p>💼 <em>اضغط على زر "إنجازاتي" في الأسفل</em></p>`,
+
+            15: `<p><strong>🎯 راجع تقدمك</strong></p>
+                <p>راجع ما أنجزته خلال الأسبوعين الماضيين.</p>
+                <p>📈 <em>استعد لمرحلة الإثبات</em></p>`,
+
+            30: `<p><strong>⚡ منتصف الرحلة</strong></p>
+                <p>وصلت إلى منتصف رحلة النجاح! تهانينا!</p>
+                <p>🎊 <em>استعد لمرحلة كسب العملاء</em></p>`,
+
+            45: `<p><strong>🎉 اليوم الأخير</strong></p>
+                <p>مبروك! أكملت رحلة الـ45 يوماً بنجاح.</p>
+                <p>🏆 <em>أنت الآن مستعد لبدء رحلتك بمهنية</em></p>`
         };
 
-        return tasks[day] || `<h3>المهمة اليومية - اليوم ${day}</h3>
-                            <p>استمر في رحلتك! اليوم سيساعدك في التقدم خطوة أخرى نحو أهدافك.</p>`;
+        return tasks[day] || `<p><strong>اليوم ${day} - استمر في التقدم</strong></p>
+                            <p>واصل رحلتك نحو النجاح في العمل الحر.</p>
+                            <p>💪 <em>كل يوم يقربك من أهدافك</em></p>`;
     }
 
     resetProofSection() {
         document.getElementById('proofPreview').style.display = 'none';
-        document.getElementById('proofText').value = '';
+        document.getElementById('proofNotes').value = '';
         document.getElementById('proofFile').value = '';
         this.updateSubmitButton();
     }
 
-    updateSubmitButton() {
-        const submitBtn = document.getElementById('submitTaskBtn');
-        const hasProof = document.getElementById('proofPreview').style.display !== 'none' || 
-                        document.getElementById('proofText').value.trim() !== '';
-        submitBtn.disabled = !hasProof;
-    }
-
-    updateNavigation() {
-        document.getElementById('websiteBtn').disabled = this.currentDay < 7;
-        document.getElementById('portfolioBtn').disabled = this.currentDay < 15;
-    }
-
-    setupEventListeners() {
-        document.getElementById('uploadProofBtn').addEventListener('click', () => {
-            document.getElementById('proofFile').click();
-        });
-
-        document.getElementById('proofFile').addEventListener('change', (e) => {
-            this.handleProofUpload(e);
-        });
-
-        document.getElementById('removeProofBtn').addEventListener('click', () => {
-            this.resetProofSection();
-        });
-
-        document.getElementById('proofText').addEventListener('input', () => {
-            this.updateSubmitButton();
-        });
-
-        document.getElementById('submitTaskBtn').addEventListener('click', () => {
-            this.submitTask();
-        });
-
-        document.getElementById('websiteBtn').addEventListener('click', () => {
-            this.openWebsiteBuilder();
-        });
-
-        document.getElementById('portfolioBtn').addEventListener('click', () => {
-            this.openPortfolioManager();
-        });
-
-        document.getElementById('achievementsBtn').addEventListener('click', () => {
-            this.showAchievements();
-        });
-
-        document.getElementById('certificateBtn').addEventListener('click', () => {
-            this.showCertificate();
-        });
-
-        document.getElementById('closeAchievements').addEventListener('click', () => {
-            document.getElementById('achievementsModal').style.display = 'none';
-        });
-    }
-
-    handleProofUpload(event) {
+    handleFileUpload(event) {
         const file = event.target.files[0];
-        if (file) {
+        if (file && file.type.startsWith('image/')) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 document.getElementById('previewImage').src = e.target.result;
@@ -214,14 +224,45 @@ class Najah45Dashboard {
         }
     }
 
+    removeProof() {
+        this.resetProofSection();
+    }
+
+    updateSubmitButton() {
+        const hasProof = document.getElementById('proofPreview').style.display !== 'none' || 
+                        document.getElementById('proofNotes').value.trim() !== '';
+        document.getElementById('submitBtn').disabled = !hasProof;
+    }
+
+    updateNavigation() {
+        document.getElementById('websiteBtn').disabled = this.currentDay < 7;
+        document.getElementById('portfolioBtn').disabled = this.currentDay < 8;
+    }
+
+    updatePhases() {
+        // إزالة النشاط من جميع المراحل
+        document.querySelectorAll('.phase-pill').forEach(pill => {
+            pill.classList.remove('active');
+        });
+
+        // تفعيل المرحلة الحالية
+        if (this.currentDay <= 15) {
+            document.getElementById('phase1').classList.add('active');
+        } else if (this.currentDay <= 30) {
+            document.getElementById('phase2').classList.add('active');
+        } else {
+            document.getElementById('phase3').classList.add('active');
+        }
+    }
+
     submitTask() {
         if (this.currentDay > this.totalDays) {
             alert('🎉 مبروك! أكملت جميع أيام التحدي بنجاح!');
             return;
         }
 
-        // Save proof
-        const proofText = document.getElementById('proofText').value;
+        // حفظ الإثبات
+        const proofText = document.getElementById('proofNotes').value;
         const proofFile = document.getElementById('proofFile').files[0];
         
         this.progressData.proofs = this.progressData.proofs || {};
@@ -231,26 +272,26 @@ class Najah45Dashboard {
             timestamp: new Date().toISOString()
         };
 
-        // Update progress - INSTANT UNLOCK (no 24h wait)
+        // تحديث التقدم - فتح فوري (بدون انتظار 24 ساعة)
         if (!this.progressData.completedDays.includes(this.currentDay)) {
             this.progressData.completedDays.push(this.currentDay);
         }
 
-        // Calculate streak
+        // حساب التتابع
         this.calculateStreak();
 
-        // Move to next day - IMMEDIATELY
+        // الانتقال لليوم التالي - فوري
         this.currentDay++;
         this.progressData.currentDay = this.currentDay;
 
-        // Save and update
+        // الحفظ والتحديث
         this.saveProgress();
-        this.checkAchievements();
+        this.checkMedals();
         
-        // Show celebration
-        this.showCelebration();
+        // الاحتفال
+        this.celebrate();
         
-        // Update dashboard
+        // تحديث اللوحة
         setTimeout(() => {
             this.updateDashboard();
         }, 2000);
@@ -271,85 +312,103 @@ class Najah45Dashboard {
         this.progressData.streak = streak;
     }
 
-    checkAchievements() {
-        const unlocked = [];
+    checkMedals() {
+        const newlyUnlocked = [];
         
-        this.achievements.forEach(achievement => {
-            if (this.progressData.completedDays.includes(achievement.day) && 
-                !this.progressData.achievements.includes(achievement.id)) {
-                unlocked.push(achievement);
-                this.progressData.achievements.push(achievement.id);
+        this.medals.forEach(medal => {
+            if (this.progressData.completedDays.includes(medal.day) && 
+                !this.progressData.unlockedMedals.includes(medal.id)) {
+                newlyUnlocked.push(medal);
+                this.progressData.unlockedMedals.push(medal.id);
             }
         });
 
-        if (unlocked.length > 0) {
-            this.showUnlockedAchievements(unlocked);
+        if (newlyUnlocked.length > 0) {
+            this.showUnlockedMedals(newlyUnlocked);
         }
         
         this.saveProgress();
     }
 
-    showUnlockedAchievements(achievements) {
+    showUnlockedMedals(medals) {
         let message = "🎉 مبروك! فزت بميداليات جديدة:\n\n";
-        achievements.forEach(ach => {
-            message += `${ach.icon} ${ach.name}\n${ach.desc}\n\n`;
+        medals.forEach(medal => {
+            message += `${medal.icon} ${medal.name}\n${medal.desc}\n\n`;
         });
         alert(message);
     }
 
-    showCelebration() {
-        const submitBtn = document.getElementById('submitTaskBtn');
-        submitBtn.classList.add('celebration-animation');
-        
-        setTimeout(() => {
-            submitBtn.classList.remove('celebration-animation');
-        }, 1000);
+    celebrate() {
+        // رسوميات الاحتفال
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 }
+        });
 
+        // رسالة نجاح
         alert(`🎊 مبروك! أكملت اليوم ${this.currentDay - 1} بنجاح!\n\nاليوم التالي مفتوح الآن!`);
     }
 
-    openWebsiteBuilder() {
+    openWebsite() {
         alert('🚀 أداة بناء الموقع الشخصي - قيد التطوير\n\nستساعدك في إنشاء موقع احترافي خلال 3 أيام!');
     }
 
-    openPortfolioManager() {
+    openPortfolio() {
         alert('📊 مدير المحفظة الشخصية - قيد التطوير\n\nستعرض هنا أفضل أعمالك وإنجازاتك!');
     }
 
-    showAchievements() {
-        const grid = document.getElementById('achievementsGrid');
+    showMedals() {
+        const grid = document.getElementById('medalsGrid');
         grid.innerHTML = '';
         
-        this.achievements.forEach(achievement => {
+        this.medals.forEach(medal => {
+            const isUnlocked = this.progressData.unlockedMedals.includes(medal.id);
             const card = document.createElement('div');
-            card.className = `achievement-card ${this.progressData.achievements.includes(achievement.id) ? 'unlocked' : ''}`;
+            card.className = `medal-card ${isUnlocked ? 'unlocked' : ''}`;
             
             card.innerHTML = `
-                <div class="achievement-icon">${achievement.icon}</div>
-                <h4>${achievement.name}</h4>
-                <p>${achievement.desc}</p>
-                <small>${this.progressData.achievements.includes(achievement.id) ? '✅ مكتمل' : '🔒 مقفل'}</small>
+                <div class="medal-icon">${medal.icon}</div>
+                <div class="medal-name">${medal.name}</div>
+                <div class="medal-desc">${medal.desc}</div>
+                <div class="medal-status ${isUnlocked ? 'unlocked' : 'locked'}">
+                    ${isUnlocked ? '✅ مكتمل' : '🔒 مقفل'}
+                </div>
             `;
             
             grid.appendChild(card);
         });
         
-        document.getElementById('achievementsModal').style.display = 'block';
+        document.getElementById('medalsModal').style.display = 'block';
     }
 
     showCertificate() {
         const completed = this.progressData.completedDays.length;
-        const eligible = completed >= 45;
+        const progress = Math.min(100, (completed / this.totalDays) * 100);
+        const isEligible = completed >= this.totalDays;
         
-        const message = eligible ? 
-            `🏆 تهانينا! أنت مؤهل للحصول على شهادة نجاح 45!\n\nأكملت ${completed} من 45 يوم بنجاح.` :
-            `📜 تقدمك نحو الشهادة: ${completed} من 45 يوم مكتمل\n\nأنت تحتاج ${45 - completed} أيام إضافية للحصول على الشهادة.`;
-            
-        alert(message);
+        const content = document.getElementById('certificateContent');
+        content.innerHTML = `
+            <div class="certificate-progress">
+                ${isEligible ? 
+                    '🏆 تهانينا! أنت مؤهل للحصول على شهادة نجاح 45!' :
+                    `📊 تقدمك نحو الشهادة: ${completed}/${this.totalDays} يوم (${progress.toFixed(1)}%)`
+                }
+            </div>
+            <p>${isEligible ? 
+                'لقد أكملت جميع الأيام الـ45 بنجاح. أنت الآن جاهز لبدء رحلتك في العمل الحر!' :
+                `أنت تحتاج ${this.totalDays - completed} أيام إضافية للحصول على الشهادة. استمر!`
+            }</p>
+            <button class="certificate-download" ${isEligible ? '' : 'disabled'}>
+                📥 تحميل الشهادة
+            </button>
+        `;
+        
+        document.getElementById('certificateModal').style.display = 'block';
     }
 }
 
-// Initialize the dashboard
+// تهيئة اللوحة عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', function() {
     new Najah45Dashboard();
 });
